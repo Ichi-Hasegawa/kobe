@@ -14,7 +14,7 @@ using Image2D = itk::Image<PixelType, 2>;
 using Hist = std::vector<short>;
 using Range = std::pair<short, short>;
 
-struct BoundingBoxParams {
+struct BoxParam {
     cv::Point2f center;   // 矩形の中心座標
     cv::Size2f size;      // 矩形の幅と高さ
     float angle;          // 回転角度（度）
@@ -22,7 +22,7 @@ struct BoundingBoxParams {
 
 namespace parida {
     template <typename PixelType>
-    BoundingBoxParams calc_jaw_area_params(const typename itk::Image<PixelType, 2>::Pointer&);
+    BoxParam calc_jaw_area_param(const typename itk::Image<PixelType, 2>::Pointer&);
 
     cv::Point calc_asteroid_rotation_center(float t, float h, float k, float a, float b);
     
@@ -34,7 +34,7 @@ namespace parida {
     template <typename PixelType>
     typename itk::Image<PixelType, 2>::Pointer compute_panoramic_image(
         const typename itk::Image<PixelType, 3>::Pointer&, 
-        const BoundingBoxParams&
+        const BoxParam&
     );
 
 }

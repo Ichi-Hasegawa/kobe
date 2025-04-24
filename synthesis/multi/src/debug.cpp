@@ -186,6 +186,8 @@ cv::Mat parida::draw_jaw_box(
     return mip_color;
 }
 
+
+
 template <typename PixelType>
 cv::Mat parida::draw_sagittal_plane(
     const typename itk::Image<PixelType, 2>::Pointer &mip_image,  
@@ -309,11 +311,11 @@ cv::Mat parida::draw_coronal_plane(
 
     return result;
 }
-/*
+
 template <typename PixelType>
 cv::Mat parida::draw_axial_plane(
     const typename itk::Image<PixelType, 2>::Pointer &img,
-    const BoundingBoxParams &box_params
+    const BoxParam &box_params
 ) {
     // Convert ITK image size to OpenCV format
     typename itk::Image<PixelType, 2>::SizeType size_itk = img->GetLargestPossibleRegion().GetSize();
@@ -392,7 +394,7 @@ cv::Mat parida::draw_axial_plane(
             int px = pixel.first;
             int py = pixel.second;
             if (px >= 0 && px < normalized_img.cols && py >= 0 && py < normalized_img.rows) {
-                //normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255); // 光線を黄色に描画
+                normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255); // 光線を黄色に描画
             }
         }
 
@@ -401,7 +403,7 @@ cv::Mat parida::draw_axial_plane(
 
         // 回転中心から光源までの線を描画（非拡張部分のみ）
         if (angle >= 180.0f && angle <= 360.0f) {
-            //cv::line(normalized_img, rotation_center, cv::Point(cvRound(x), cvRound(y)), cv::Scalar(0, 0, 255), 1);  // 青色で描画
+            cv::line(normalized_img, rotation_center, cv::Point(cvRound(x), cvRound(y)), cv::Scalar(0, 0, 255), 1);  // 青色で描画
         }
     }
 
@@ -429,7 +431,7 @@ cv::Mat parida::draw_axial_plane(
             int px = pixel.first;
             int py = pixel.second;
             if (px >= 0 && px < normalized_img.cols && py >= 0 && py < normalized_img.rows) {
-                //normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255); // 光線を黄色に描画
+                normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255); // 光線を黄色に描画
             }
         }
 
@@ -458,7 +460,7 @@ cv::Mat parida::draw_axial_plane(
             int px = pixel.first;
             int py = pixel.second;
             if (px >= 0 && px < normalized_img.cols && py >= 0 && py < normalized_img.rows) {
-                //normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255); // 光線を黄色に描画
+                normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255); // 光線を黄色に描画
             }
         }
 
@@ -469,298 +471,14 @@ cv::Mat parida::draw_axial_plane(
 
     return normalized_img;
 }
-*/
-/* true
-template <typename PixelType>
-cv::Mat parida::draw_axial_plane(
-    const typename itk::Image<PixelType, 2>::Pointer &img,
-    const BoundingBoxParams &box_params
-) {
-    // Convert ITK image size to OpenCV format
-    typename itk::Image<PixelType, 2>::SizeType size_itk = img->GetLargestPossibleRegion().GetSize();
-    cv::Mat img_cv(size_itk[1], size_itk[0], CV_MAKETYPE(cv::DataType<PixelType>::depth, 1));
 
-    // Copy ITK image data to OpenCV matrix
-    itk::ImageRegionConstIterator<itk::Image<PixelType, 2>> imgIter(img, img->GetLargestPossibleRegion());
-    for (int y = 0; y < img_cv.rows; ++y) {
-        for (int x = 0; x < img_cv.cols; ++x, ++imgIter) {
-            img_cv.at<PixelType>(y, x) = imgIter.Get();
-        }
-    }
-
-    // Normalize the image to 8-bit format for visualization
-    cv::Mat img_8bit;
-    double min_val, max_val;
-    cv::minMaxLoc(img_cv, &min_val, &max_val);
-    img_cv.convertTo(img_8bit, CV_8UC1, 255.0 / (max_val - min_val), -min_val * 255.0 / (max_val - min_val));
-
-    // Convert to BGR format for color drawing
-    cv::Mat normalized_img;
-    cv::cvtColor(img_8bit, normalized_img, cv::COLOR_GRAY2BGR);
-    // Draw bounding box
-    cv::rectangle(normalized_img, 
-        cv::Point(box_params.center.x - box_params.size.width / 2, box_params.center.y - box_params.size.height / 2),
-        cv::Point(box_params.center.x + box_params.size.width / 2, box_params.center.y + box_params.size.height / 2),
-        cv::Scalar(0, 255, 0), 2);
-    // --- サンプリング点と光線の描画 ---
-    float h = box_params.center.x;
-    float k = box_params.center.y + box_params.size.height / 2;
-    float a = 4 * box_params.size.width / 10.0f;
-    float b = 8 * box_params.size.height / 10.0f;
-
-    auto compute_shift_step = [](float angle) {
-        float theta = (angle - 180.0f) / 180.0f;
-        return 3.0f + (7.0f - 3.0f) * std::sin(theta * CV_PI) * std::sin(theta * CV_PI);
-    };
-
-    float asteroid_radius_x = box_params.size.width / 2.0f;
-    float asteroid_radius_y = box_params.size.height / 2.0f;
-    cv::Point prev_rotation_center;
-    float angle = 180.0f;
-
-    while (angle <= 360.0f) {
-        float shift_step = compute_shift_step(angle);
-        angle += shift_step;
-        float theta = angle * CV_PI / 180.0f;
-        float reverse_angle = 540.0f - angle;
-        float asteroid_theta = reverse_angle * CV_PI / 180.0f;
-
-        float x = h + a * cos(theta);
-        float y = k + b * sin(theta);
-        float rotation_center_x = h + asteroid_radius_x * std::pow(std::cos(asteroid_theta), 3);
-        float rotation_center_y = k + asteroid_radius_y * std::pow(std::sin(asteroid_theta), 3);
-        cv::Point rotation_center(cvRound(rotation_center_x), cvRound(rotation_center_y));
-
-        if (angle > 180.0f + shift_step) {
-            cv::line(normalized_img, prev_rotation_center, rotation_center, cv::Scalar(0, 0, 255), 1);
-        }
-        prev_rotation_center = rotation_center;
-
-        cv::circle(normalized_img, rotation_center, 3, cv::Scalar(0, 0, 255), -1);
-        float ray_slope = (y - rotation_center.y) / (x - rotation_center.x);
-        int ray_length = 300;
-        std::vector<std::pair<int, int>> pixels = getPerpendicularLinePixels(x, y, ray_slope, ray_length);
-
-        for (const auto& pixel : pixels) {
-            int px = pixel.first;
-            int py = pixel.second;
-            if (px >= 0 && px < normalized_img.cols && py >= 0 && py < normalized_img.rows) {
-                normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 255, 255);
-            }
-        }
-
-        cv::circle(normalized_img, cv::Point(cvRound(x), cvRound(y)), 2, cv::Scalar(255, 0, 0), -1);
-        if (angle >= 180.0f && angle <= 360.0f) {
-            cv::line(normalized_img, rotation_center, cv::Point(cvRound(x), cvRound(y)), cv::Scalar(0, 255, 255), 1);
-        }
-    }
-
-    // --- 拡張処理 ---
-    float extend_angles[] = {160.0f, 180.0f, 360.0f, 380.0f};
-    for (int i = 0; i < 2; ++i) {
-        float extend_start_angle = extend_angles[i * 2];
-        float extend_end_angle = extend_angles[i * 2 + 1];
-        while (extend_start_angle <= extend_end_angle) {
-            float theta = extend_start_angle * CV_PI / 180.0f;
-            float x = h + a * cos(CV_PI / 180.0f * (i == 0 ? 180.0f : 360.0f));
-            float y = k + b * sin(theta) * 1.5f;
-            int ray_length = 300;
-            std::vector<std::pair<int, int>> pixels = getPerpendicularLinePixels(x, y, 0.0f, ray_length);
-
-            for (const auto& pixel : pixels) {
-                int px = pixel.first;
-                int py = pixel.second;
-                if (px >= 0 && px < normalized_img.cols && py >= 0 && py < normalized_img.rows) {
-                    normalized_img.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 255, 255);
-                }
-            }
-            cv::circle(normalized_img, cv::Point(cvRound(x), cvRound(y)), 2, cv::Scalar(255, 0, 0), -1);
-            extend_start_angle += 3.0f;
-        }
-    }
-
-    return normalized_img;
-}*/
-template <typename PixelType>
-cv::Mat parida::draw_axial_plane(
-    const typename itk::Image<PixelType, 2>::Pointer &img,
-    const BoundingBoxParams &box_params
-) {
-    // Convert ITK image size to OpenCV format
-    typename itk::Image<PixelType, 2>::SizeType size_itk = img->GetLargestPossibleRegion().GetSize();
-    cv::Mat img_cv(size_itk[1], size_itk[0], CV_MAKETYPE(cv::DataType<PixelType>::depth, 1));
-
-    // Copy ITK image data to OpenCV matrix
-    itk::ImageRegionConstIterator<itk::Image<PixelType, 2>> imgIter(img, img->GetLargestPossibleRegion());
-    for (int y = 0; y < img_cv.rows; ++y) {
-        for (int x = 0; x < img_cv.cols; ++x, ++imgIter) {
-            img_cv.at<PixelType>(y, x) = imgIter.Get();
-        }
-    }
-
-    // Normalize the image to 8-bit format for visualization
-    cv::Mat img_8bit;
-    double min_val, max_val;
-    cv::minMaxLoc(img_cv, &min_val, &max_val);
-    img_cv.convertTo(img_8bit, CV_8UC1, 255.0 / (max_val - min_val), -min_val * 255.0 / (max_val - min_val));
-
-    // Convert to BGR format for color drawing
-    cv::Mat normalized_img;
-    cv::cvtColor(img_8bit, normalized_img, cv::COLOR_GRAY2BGR);
-    
-    // Draw bounding box (red, thickness 2)
-    cv::rectangle(normalized_img, 
-        cv::Point(box_params.center.x - box_params.size.width / 2, box_params.center.y - box_params.size.height / 2),
-        cv::Point(box_params.center.x + box_params.size.width / 2, box_params.center.y + box_params.size.height / 2),
-        cv::Scalar(0, 0, 255), 2);
-
-    // --- Draw ellipse and astroid curve ---
-    float h = box_params.center.x;
-    float k = box_params.center.y + box_params.size.height / 2;
-    float a = 4.5 * box_params.size.width / 10.0f;
-    float b = 9 * box_params.size.height / 10.0f;
-
-    float asteroid_radius_x = box_params.size.width / 2.0f;
-    float asteroid_radius_y = box_params.size.height / 2.0f;
-    cv::Point prev_point, prev_asteroid_point;
-    bool first = true;
-
-    for (float angle = 180.0f; angle <= 360.0f; angle += 2.0f) {
-        float theta = angle * CV_PI / 180.0f;
-        float reverse_angle = 540.0f - angle;
-        float asteroid_theta = reverse_angle * CV_PI / 180.0f;
-
-        float x = h + a * cos(theta);
-        float y = k + b * sin(theta);
-        float asteroid_x = h + asteroid_radius_x * std::pow(std::cos(asteroid_theta), 3);
-        float asteroid_y = k + asteroid_radius_y * std::pow(std::sin(asteroid_theta), 3);
-        cv::Point point(cvRound(x), cvRound(y));
-        cv::Point asteroid_point(cvRound(asteroid_x), cvRound(asteroid_y));
-
-        if (!first) {
-            cv::line(normalized_img, prev_point, point, cv::Scalar(0, 0, 255), 2); // Red ellipse
-            cv::line(normalized_img, prev_asteroid_point, asteroid_point, cv::Scalar(0, 0, 255), 2); // Red astroid
-        }
-        first = false;
-        prev_point = point;
-        prev_asteroid_point = asteroid_point;
-    }
-
-    // --- Draw more rays (yellow) ---
-    for (float angle = 180.0f; angle <= 360.0f; angle += 3.0f) {
-        float theta = angle * CV_PI / 180.0f;
-        float outer_x = h + (a + 100) * cos(theta);
-        float outer_y = k + (b + 100) * sin(theta);
-        float asteroid_x = h + asteroid_radius_x * std::pow(std::cos((540.0f - angle) * CV_PI / 180.0f), 3);
-        float asteroid_y = k + asteroid_radius_y * std::pow(std::sin((540.0f - angle) * CV_PI / 180.0f), 3);
-        cv::Point start(cvRound(outer_x), cvRound(outer_y));
-        cv::Point end(cvRound(asteroid_x), cvRound(asteroid_y));
-        cv::line(normalized_img, start, end, cv::Scalar(0, 255, 255), 1);
-    }
-
-    return normalized_img;
-}
-
-/*
-template <typename PixelType>
-cv::Mat parida::draw_axial_plane(
-    const typename itk::Image<PixelType, 2>::Pointer &img,
-    const BoundingBoxParams &box_params
-) {
-    typename itk::Image<PixelType, 2>::SizeType size_itk = img->GetLargestPossibleRegion().GetSize();
-    cv::Mat img_cv(size_itk[1], size_itk[0], CV_MAKETYPE(cv::DataType<PixelType>::depth, 1));
-
-    itk::ImageRegionConstIterator<itk::Image<PixelType, 2>> imgIter(img, img->GetLargestPossibleRegion());
-    for (int y = 0; y < img_cv.rows; ++y) {
-        for (int x = 0; x < img_cv.cols; ++x, ++imgIter) {
-            img_cv.at<PixelType>(y, x) = imgIter.Get();
-        }
-    }
-
-    cv::Mat img_8bit;
-    double min_val, max_val;
-    cv::minMaxLoc(img_cv, &min_val, &max_val);
-    img_cv.convertTo(img_8bit, CV_8UC1, 255.0 / (max_val - min_val), -min_val * 255.0 / (max_val - min_val));
-
-    cv::Mat normalized_img;
-    cv::cvtColor(img_8bit, normalized_img, cv::COLOR_GRAY2BGR);
-
-    float h = box_params.center.x;
-    float k = box_params.center.y + box_params.size.height / 2;
-    float a = 4 * box_params.size.width / 10.0f;
-    float b = 8 * box_params.size.height / 10.0f;
-
-    float asteroid_radius_x = box_params.size.width / 2.0f;
-    float asteroid_radius_y = box_params.size.height / 2.0f;
-
-    cv::Point prev_rotation_center;
-    cv::Point prev_ellipse_point;
-
-    float angle = 180.0f;
-    while (angle <= 360.0f) {
-        float theta = angle * CV_PI / 180.0f;
-        float reverse_angle = 540.0f - angle;
-        float asteroid_theta = reverse_angle * CV_PI / 180.0f;
-
-        float x = h + a * cos(theta);
-        float y = k + b * sin(theta);
-        cv::Point ellipse_point(cvRound(x), cvRound(y));
-
-        float rotation_center_x = h + asteroid_radius_x * std::pow(std::cos(asteroid_theta), 3);
-        float rotation_center_y = k + asteroid_radius_y * std::pow(std::sin(asteroid_theta), 3);
-        cv::Point rotation_center(cvRound(rotation_center_x), cvRound(rotation_center_y));
-
-        if (angle > 180.0f) {
-            cv::line(normalized_img, prev_ellipse_point, ellipse_point, cv::Scalar(0, 0, 255), 2);
-            cv::line(normalized_img, prev_rotation_center, rotation_center, cv::Scalar(0, 0, 255), 1);
-        }
-        prev_ellipse_point = ellipse_point;
-        prev_rotation_center = rotation_center;
-
-        cv::circle(normalized_img, rotation_center, 3, cv::Scalar(0, 0, 255), -1);
-        angle += 1.0f;
-    }
-
-    float extend_start_angle = 160.0f;
-    float extend_end_angle = 180.0f;
-    cv::Point prev_extend_point;
-    while (extend_start_angle <= extend_end_angle) {
-        float theta = extend_start_angle * CV_PI / 180.0f;
-        float x = h + a * cos(CV_PI / 180.0f * 180.0f);
-        float y = k + b * sin(theta) * 1.5f;
-        cv::Point extend_point(cvRound(x), cvRound(y));
-
-        if (extend_start_angle > 160.0f) {
-            cv::line(normalized_img, prev_extend_point, extend_point, cv::Scalar(0, 0, 255), 2);
-        }
-        prev_extend_point = extend_point;
-        extend_start_angle += 3.0f;
-    }
-
-    extend_start_angle = 360.0f;
-    extend_end_angle = 380.0f;
-    while (extend_start_angle <= extend_end_angle) {
-        float theta = extend_start_angle * CV_PI / 180.0f;
-        float x = h + a * cos(CV_PI / 180.0f * 360.0f);
-        float y = k + b * sin(theta) * 1.5f;
-        cv::Point extend_point(cvRound(x), cvRound(y));
-
-        if (extend_start_angle > 360.0f) {
-            cv::line(normalized_img, prev_extend_point, extend_point, cv::Scalar(0, 0, 255), 2);
-        }
-        prev_extend_point = extend_point;
-        extend_start_angle += 3.0f;
-    }
-
-    return normalized_img;
-}*/
 
 #define PIXEL_TYPE_DEBUG(T) \
     template cv::Mat parida::draw_2d_image<T>(const typename itk::Image<T, 2>::Pointer &img); \
     template cv::Mat parida::draw_jaw_box<T>(const typename itk::Image<T, 2>::Pointer &mip_image, const typename itk::Image<T, 2>::Pointer &mask_image); \
     template cv::Mat parida::draw_sagittal_plane<T>(const typename itk::Image<T, 2>::Pointer &mip_image, const typename itk::Image<T, 2>::Pointer &mask_image); \
     template cv::Mat parida::draw_coronal_plane<T>(const typename itk::Image<T, 2>::Pointer &img, const std::pair<short, short> &slice_range); \
-    template cv::Mat parida::draw_axial_plane<T>(const typename itk::Image<T, 2>::Pointer &img, const BoundingBoxParams &box_params);
+    template cv::Mat parida::draw_axial_plane<T>(const typename itk::Image<T, 2>::Pointer &img, const BoxParam &box_params);
 
 PIXEL_TYPE_DEBUG(double)
 PIXEL_TYPE_DEBUG(short)

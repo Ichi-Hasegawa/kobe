@@ -6,38 +6,33 @@
 
 #include "synthesis.hpp"
 
+
 // Calculate Jaw Box Parameter
 template <typename PixelType>
-BoundingBoxParams parida::calc_jaw_area_params(const typename itk::Image<PixelType, 2>::Pointer &img) {
-    // Get the image size and convert to OpenCV Mat format
-    typename itk::Image<PixelType, 2>::SizeType size = img->GetLargestPossibleRegion().GetSize();
+BoxParam parida::calc_jaw_area_param(const typename itk::Image<PixelType, 2>::Pointer& img) {
+    auto size = img->GetLargestPossibleRegion().GetSize();
     cv::Mat img_cv(size[1], size[0], CV_MAKETYPE(cv::DataType<PixelType>::depth, 1), const_cast<PixelType*>(img->GetBufferPointer()));
 
-    // Convert ITK image to OpenCV Mat with appropriate type based on PixelType
     cv::Mat img_8bit;
     if (std::is_integral<PixelType>::value) {
-        img_cv.convertTo(img_8bit, CV_8UC1); // If PixelType is an integral type
+        img_cv.convertTo(img_8bit, CV_8UC1);
     } else {
-        img_cv.convertTo(img_8bit, CV_8UC1, 255.0); // If PixelType is a floating-point type
+        img_cv.convertTo(img_8bit, CV_8UC1, 255.0);
     }
 
-    // Apply Otsu's thresholding for binarization
     cv::Mat binary;
     cv::threshold(img_8bit, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
-    // Find contours in the binary image
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    // If no contours are found, throw an exception
     if (contours.empty()) {
         throw std::runtime_error("No contours found in the image.");
     }
 
-    // Select the largest contour
     int max_area_idx = -1;
     double max_area = 0.0;
-    for (size_t i = 0; i < contours.size(); i++) {
+    for (size_t i = 0; i < contours.size(); ++i) {
         double area = cv::contourArea(contours[i]);
         if (area > max_area) {
             max_area = area;
@@ -45,16 +40,19 @@ BoundingBoxParams parida::calc_jaw_area_params(const typename itk::Image<PixelTy
         }
     }
 
-    // Calculate the bounding box for the largest contour (without rotation)
     cv::Rect bounding_box = cv::boundingRect(contours[max_area_idx]);
 
-    BoundingBoxParams bbox_params;
-    bbox_params.center = cv::Point2f(bounding_box.x + bounding_box.width / 2.0f, bounding_box.y + bounding_box.height / 2.0f);  // Center coordinates (float)
-    bbox_params.size = cv::Size2f(bounding_box.width, bounding_box.height);  // Width and Height (float)
-    bbox_params.angle = 0;  // No tilt (angle = 0)
+    BoxParam bbox_param;
+    bbox_param.center = cv::Point2f(
+        bounding_box.x + bounding_box.width / 2.0f,
+        bounding_box.y + bounding_box.height / 2.0f
+    );
+    bbox_param.size = cv::Size2f(bounding_box.width, bounding_box.height);
+    bbox_param.angle = 0;
 
-    return bbox_params;
+    return bbox_param;
 }
+
 
 cv::Point parida::calc_asteroid_rotation_center(float t, float h, float k, float a, float b) {
     float x = h + a * std::pow(std::cos(t), 3);
@@ -69,31 +67,33 @@ float parida::calc_shift_step(float angle, float min_shift, float max_shift, flo
     return std::clamp(static_cast<float>(adaptive_shift), min_shift, max_shift);
 }
 
-std::vector<std::pair<int, int>> parida::getPerpendicularLinePixels(double cx, double cy, double normalSlope, int length) {
+
+std::vector<std::pair<int, int>> parida::getPerpendicularLinePixels(
+    double cx, double cy, double normalSlope, int length
+) {
     std::vector<std::pair<int, int>> pixels;
 
-    // 垂線の半分の長さを計算
     double half_length = length / 2.0;
-    double dx = half_length / sqrt(1 + normalSlope * normalSlope);
+    double dx = half_length / std::sqrt(1 + normalSlope * normalSlope);
     double dy = normalSlope * dx;
 
-    // 垂線の始点と終点を計算
+    // Endpoints of the perpendicular line
     double x1 = cx - dx;
     double y1 = cy - dy;
     double x2 = cx + dx;
     double y2 = cy + dy;
 
-    // 線分上の画素数を均等にサンプリング
+    // Sample pixels uniformly along the line
     double step = 1.0 / (length - 1);
     for (double t = 0; t <= 1.0; t += step) {
-        int x = static_cast<int>(round(x1 + t * (x2 - x1)));
-        int y = static_cast<int>(round(y1 + t * (y2 - y1)));
+        int x = static_cast<int>(std::round(x1 + t * (x2 - x1)));
+        int y = static_cast<int>(std::round(y1 + t * (y2 - y1)));
         pixels.emplace_back(x, y);
     }
 
-    // 最後の点を追加して線分の端点を保証
-    int x_end = static_cast<int>(round(x2));
-    int y_end = static_cast<int>(round(y2));
+    // Ensure the endpoint is included
+    int x_end = static_cast<int>(std::round(x2));
+    int y_end = static_cast<int>(std::round(y2));
     if (pixels.back().first != x_end || pixels.back().second != y_end) {
         pixels.emplace_back(x_end, y_end);
     }
@@ -101,17 +101,18 @@ std::vector<std::pair<int, int>> parida::getPerpendicularLinePixels(double cx, d
     return pixels;
 }
 
+
 // Synthesis Panoramic X-ray Image
 template <typename PixelType>
 typename itk::Image<PixelType, 2>::Pointer parida::compute_panoramic_image(
     const typename itk::Image<PixelType, 3>::Pointer &img,
-    const BoundingBoxParams &box_params
+    const BoxParam &box_param
 ) {
     // Set the parameters for the ellipse
-    float h = box_params.center.x;                          // Ellipse center X
-    float k = box_params.center.y + box_params.size.height / 2; // Ellipse center Y
-    float a = 4 * box_params.size.width / 10.0f;            // Ellipse semi-major axis
-    float b = 8 * box_params.size.height / 10.0f;           // Ellipse semi-minor axis
+    float h = box_param.center.x;                          // Ellipse center X
+    float k = box_param.center.y + box_param.size.height / 2; // Ellipse center Y
+    float a = 4 * box_param.size.width / 10.0f;            // Ellipse semi-major axis
+    float b = 8 * box_param.size.height / 10.0f;           // Ellipse semi-minor axis
 
     // Sampling range for angles
     float start_angle = 160.0f;
@@ -194,8 +195,8 @@ typename itk::Image<PixelType, 2>::Pointer parida::compute_panoramic_image(
             float reverse_angle = 540.0f - angle;
             float asteroid_theta = reverse_angle * M_PI / 180.0f;
 
-            float rotation_center_x = h + (box_params.size.width / 2.0f) * std::pow(std::cos(asteroid_theta), 3);
-            float rotation_center_y = k + (box_params.size.height / 2.0f) * std::pow(std::sin(asteroid_theta), 3);
+            float rotation_center_x = h + (box_param.size.width / 2.0f) * std::pow(std::cos(asteroid_theta), 3);
+            float rotation_center_y = k + (box_param.size.height / 2.0f) * std::pow(std::sin(asteroid_theta), 3);
             cv::Point rotation_center(cvRound(rotation_center_x), cvRound(rotation_center_y));
 
             // Calculate the ray slope
@@ -237,8 +238,8 @@ typename itk::Image<PixelType, 2>::Pointer parida::compute_panoramic_image(
 
 
 #define PIXEL_TYPE_SYNTHESIS(T) \
-    template BoundingBoxParams parida::calc_jaw_area_params<T>(const typename itk::Image<T, 2>::Pointer &img); \
-    template itk::Image<T, 2>::Pointer parida::compute_panoramic_image<T>(const typename itk::Image<T, 3>::Pointer &img, const BoundingBoxParams &box_params); 
+    template BoxParam parida::calc_jaw_area_param<T>(const typename itk::Image<T, 2>::Pointer &img); \
+    template itk::Image<T, 2>::Pointer parida::compute_panoramic_image<T>(const typename itk::Image<T, 3>::Pointer &img, const BoxParam &box_param); 
 
 PIXEL_TYPE_SYNTHESIS(double)
 PIXEL_TYPE_SYNTHESIS(short)

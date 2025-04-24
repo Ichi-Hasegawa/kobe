@@ -22,5 +22,5 @@ namespace parida {
     cv::Mat draw_coronal_plane(const typename itk::Image<PixelType, 2>::Pointer&, const typename std::pair<short, short>&);
     
     template <typename PixelType>
-    cv::Mat draw_axial_plane(const typename itk::Image<PixelType, 2>::Pointer&, const BoundingBoxParams&);
+    cv::Mat draw_axial_plane(const typename itk::Image<PixelType, 2>::Pointer&, const BoxParam&);
 }
