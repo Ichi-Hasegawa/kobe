@@ -155,10 +155,34 @@ panorama::compute_sagittal_mip_image(const typename itk::Image<PixelType, 3>::Po
 }
 
 
+template <typename PixelType>
+PixelType panorama::get_max_pixel_value(const typename itk::Image<PixelType, 3>::Pointer &img) {
+    typename itk::Image<PixelType, 3>::SizeType size = img->GetLargestPossibleRegion().GetSize();
+    PixelType max_pixel_value = std::numeric_limits<PixelType>::lowest();
+
+    for (std::size_t x = 0; x < size[0]; ++x) {
+        for (std::size_t y = 0; y < size[1]; ++y) {
+            for (std::size_t z = 0; z < size[2]; ++z) {
+                typename itk::Image<PixelType, 3>::IndexType idx;
+                idx[0] = x;
+                idx[1] = y;
+                idx[2] = z;
+
+                auto pixel_value = img->GetPixel(idx);
+                if (pixel_value > max_pixel_value) {
+                    max_pixel_value = pixel_value;
+                }
+            }
+        }
+    }
+
+    return max_pixel_value;
+}
+
 #define PIXEL_TYPE_MIP(T) \
     template itk::Image<T, 2>::Pointer panorama::compute_coronal_mip_image<T>(const itk::Image<T, 3>::Pointer &img); \
     template itk::Image<T, 2>::Pointer panorama::compute_axial_mip_image<T>(const itk::Image<T, 3>::Pointer &img); \
-    template itk::Image<T, 2>::Pointer panorama::compute_sagittal_mip_image<T>(const itk::Image<T, 3>::Pointer &img);
-
+    template itk::Image<T, 2>::Pointer panorama::compute_sagittal_mip_image<T>(const itk::Image<T, 3>::Pointer &img); \
+    template T panorama::get_max_pixel_value<T>(const itk::Image<T, 3>::Pointer &img);
 PIXEL_TYPE_MIP(double)
 PIXEL_TYPE_MIP(short)

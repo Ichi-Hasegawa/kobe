@@ -81,6 +81,7 @@ add_library(panorama STATIC
 
 set(PanoramaCT_LIBRARIES panorama)
 
+#add_subdirectory(methods)
 add_subdirectory(multi)
 
 

@@ -36,5 +36,14 @@ namespace parida {
         const typename itk::Image<PixelType, 3>::Pointer&, 
         const BoxParam&
     );
+}
 
+namespace poemi {
+    template <typename PixelType>
+    typename itk::Image<PixelType, 2>::Pointer compute_panoramic_image(
+        const typename itk::Image<PixelType, 3>::Pointer&, 
+        const BoxParam&,
+        const int&,                                     // 光線長さ（例：200）
+        const std::string&
+    );
 }

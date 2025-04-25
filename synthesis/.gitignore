@@ -1,2 +1,12 @@
 build/
 _out/
+
+
+## C++ build cache
+/build/
+CMakeFiles/
+
+# User specific files
+.env
+venv/
+
