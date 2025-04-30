@@ -85,9 +85,9 @@ class XpDataset(torch.utils.data.Dataset):
             img = np.flipud(img)
             
             #画像出力
-            #file_name = f"right_{item:04d}.jpeg"
-            #save_path = os.path.join(output_dir, file_name)
-            #cv2.imwrite(save_path, img.astype(np.uint8))
+            file_name = f"right_{item:04d}.jpeg"
+            save_path = os.path.join(output_dir, file_name)
+            cv2.imwrite(save_path, img.astype(np.uint8))
 
         # Stack to convert gray->RGB
         img = np.stack([img, img, img], axis=0).astype(np.float32)

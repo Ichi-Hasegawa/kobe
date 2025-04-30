@@ -28,8 +28,8 @@ int main() {
     const auto SRC_ROOT = HOME / "workspace" / "kobe" / "data" / "ct";
     const auto DST_ROOT = HOME / "workspace" / "kobe" / "synthesis" / "_out" / "multi";
     
-    const utils::Dataset dataset(SRC_ROOT / "data.yml");
-
+    //const utils::Dataset dataset(SRC_ROOT / "data.yml");
+    const utils::Dataset dataset(SRC_ROOT / "failct.yml");
     #pragma omp parallel for 
     for (size_t i = 0; i < dataset.size(); i++) {
     //for (size_t i = 0; i < 1; i++) {
@@ -128,8 +128,8 @@ int main() {
          * Synthesis multi panoramic X-ray Image
          */
         //std::vector<std::string> aggregation_methods = {"mean", "logarithm", "transmittance"};
-        //std::vector<std::string> aggregation_methods = {"mean", "logarithm"}; //subject 4 only
-        std::vector<std::string> aggregation_methods = {"transmittance", "max"};
+        std::vector<std::string> aggregation_methods = {"mean", "logarithm"}; //subject 4 only
+        //std::vector<std::string> aggregation_methods = {"transmittance", "max"};
         std::vector<std::pair<std::string, int>> tasks;
         for (const auto &method : aggregation_methods) {
             for (int ray_length = 80; ray_length <= 200; ray_length += 60) {
