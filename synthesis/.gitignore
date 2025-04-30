@@ -1,24 +1,24 @@
 build/
 _out/
 # 中間ディレクトリを除外（追跡可能にする）
-# !_out/multi/
-# !_out/multi/ctxp/
-# !_out/multi/ctxp/mean/
-# !_out/multi/ctxp/mean/80/
-# !_out/multi/ctxp/mean/140/
-# !_out/multi/ctxp/mean/200/
-# !_out/multi/ctxp/logarithm/
-# !_out/multi/ctxp/logarithm/80/
-# !_out/multi/ctxp/logarithm/140/
-# !_out/multi/ctxp/logarithm/200/
-# !_out/multi/ctxp/max/
-# !_out/multi/ctxp/max/80/
-# !_out/multi/ctxp/max/140/
-# !_out/multi/ctxp/max/200/
-# !_out/multi/ctxp/transmittance/
-# !_out/multi/ctxp/transmittance/80/
-# !_out/multi/ctxp/transmittance/140/
-# !_out/multi/ctxp/transmittance/200/
+!_out/multi/
+!_out/multi/ctxp/
+!_out/multi/ctxp/mean/
+!_out/multi/ctxp/mean/80/
+!_out/multi/ctxp/mean/140/
+!_out/multi/ctxp/mean/200/
+!_out/multi/ctxp/logarithm/
+!_out/multi/ctxp/logarithm/80/
+!_out/multi/ctxp/logarithm/140/
+!_out/multi/ctxp/logarithm/200/
+!_out/multi/ctxp/max/
+!_out/multi/ctxp/max/80/
+!_out/multi/ctxp/max/140/
+!_out/multi/ctxp/max/200/
+!_out/multi/ctxp/transmittance/
+!_out/multi/ctxp/transmittance/80/
+!_out/multi/ctxp/transmittance/140/
+!_out/multi/ctxp/transmittance/200/
 
 # 目的のファイルだけ許可
 !_out/multi/ctxp/mean/80/001.jpg
