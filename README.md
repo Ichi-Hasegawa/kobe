@@ -3,8 +3,7 @@
 Automatic Synthesis of Panoramic Radiographs from Computed Tomography Data
 
 ## To Do
-
-* ICMLC (〆 5/1) 
+ *知覚鈍麻
 
 ## Overview
 
