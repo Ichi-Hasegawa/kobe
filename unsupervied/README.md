@@ -1,3 +1,6 @@
 # Unsupervised
 
+## Segmentation
+
 ## Diffusion Model
+
