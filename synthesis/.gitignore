@@ -1,6 +1,17 @@
 build/
 _out/
-
+!_out/mult/ctxp/mean/80/001.jpg
+!_out/mult/ctxp/mean/140/001.jpg
+!_out/mult/ctxp/mean/200/001.jpg
+!_out/mult/ctxp/logarithm/80/001.jpg
+!_out/mult/ctxp/logarithm/140/001.jpg
+!_out/mult/ctxp/logarithm/200/001.jpg
+!_out/mult/ctxp/max/80/001.jpg
+!_out/mult/ctxp/max/140/001.jpg
+!_out/mult/ctxp/max/200/001.jpg
+!_out/mult/ctxp/transmittance/80/001.jpg
+!_out/mult/ctxp/transmittance/140/001.jpg
+!_out/mult/ctxp/transmittance/200/001.jpg
 
 ## C++ build cache
 /build/
