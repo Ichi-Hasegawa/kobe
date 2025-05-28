@@ -26,13 +26,12 @@
 int main() {
     const auto HOME = boost::filesystem::path(std::getenv("HOME"));
     const auto SRC_ROOT = HOME / "workspace" / "kobe" / "data" / "ct";
-    const auto DST_ROOT = HOME / "workspace" / "kobe" / "synthesis" / "_out" / "multi";
+    const auto DST_ROOT = HOME / "workspace" / "kobe" / "synthesis" / "_out" / "mronj" / "multi";
     
-    //const utils::Dataset dataset(SRC_ROOT / "data.yml");
-    const utils::Dataset dataset(SRC_ROOT / "failct.yml");
+    const utils::Dataset dataset(SRC_ROOT / "data.yml");
     #pragma omp parallel for 
-    for (size_t i = 0; i < dataset.size(); i++) {
-    //for (size_t i = 0; i < 1; i++) {
+    //for (size_t i = 0; i < dataset.size(); i++) {
+    for (size_t i = 0; i < 1; i++) {
         boost::filesystem::path ct_image_path = dataset.image_path(i);
         std::string input_number;
         std::smatch match;
@@ -49,7 +48,6 @@ int main() {
         
         img_ct = panorama::window_ct_image<PixelType>(img_ct);
         Image2D::Pointer coronal_mip = panorama::compute_coronal_mip_image<PixelType>(img_ct);
-
         /*
          * Calculate threshold using coronal MIP 
          */
@@ -57,7 +55,6 @@ int main() {
         Hist coronal_intensity_curve = panorama::compute_intensity_curve(coronal_intensity_hist);
         PixelType bone_threshold = panorama::calc_bone_threshold<PixelType>(coronal_intensity_curve);
         PixelType tooth_threshold = panorama::calc_tooth_threshold<PixelType>(coronal_intensity_curve);
-
         /*
          * Calculate ROI range using horizontal histogram
          */
@@ -82,7 +79,7 @@ int main() {
         // Rotate around the superior-inferior axis
         img_ct = panorama::rotate_ct_image<PixelType>(img_ct, 'z', correction_angle);
         roi_ct = panorama::rotate_ct_image<PixelType>(roi_ct, 'z', correction_angle);
-
+  
         /*
          * Jaw area detection using axial MIP from ROI slices
          */
@@ -99,6 +96,7 @@ int main() {
         sagittal_mask = panorama::process_tooth_mask<PixelType>(sagittal_mask);
         double axial_tilt_angle = poemi::calc_axial_tilt_angle<PixelType>(sagittal_mask);
         correction_angle = poemi::calc_axial_correction_angle(axial_tilt_angle);
+
         // Rotate around the left-right axis
         img_ct = panorama::rotate_ct_image<PixelType>(img_ct, 'x', correction_angle);
         sagittal_mip = panorama::compute_sagittal_mip_image<PixelType>(img_ct);
@@ -127,9 +125,7 @@ int main() {
         /*
          * Synthesis multi panoramic X-ray Image
          */
-        //std::vector<std::string> aggregation_methods = {"mean", "logarithm", "transmittance"};
-        std::vector<std::string> aggregation_methods = {"mean", "logarithm"}; //subject 4 only
-        //std::vector<std::string> aggregation_methods = {"transmittance", "max"};
+        std::vector<std::string> aggregation_methods = {"mean", "logarithm", "transmittance", "max"};
         std::vector<std::pair<std::string, int>> tasks;
         for (const auto &method : aggregation_methods) {
             for (int ray_length = 80; ray_length <= 200; ray_length += 60) {

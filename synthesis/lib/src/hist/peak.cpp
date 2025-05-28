@@ -55,6 +55,8 @@ std::vector<double> hist::calc_peak_param(
     const short& peak
 ) {
     std::vector<double> params(3);
+    if (peak < 0 || peak >= histogram.size()) return params;
+
     params[0] = static_cast<double>(histogram[peak]);
     params[1] = static_cast<double>(peak);
 
@@ -72,13 +74,15 @@ std::vector<double> hist::calc_peak_param(
         if (index_left >= 0) {
             mean_index += index_left * histogram[index_left];
             total_intensity += histogram[index_left];
-            if (i > 5 && histogram[index_left] > histogram[index_left + 1]) break;
+            if (i > 5 && index_left + 1 < histogram_size &&
+                histogram[index_left] > histogram[index_left + 1]) break;
         }
 
         if (index_right < histogram_size) {
             mean_index += index_right * histogram[index_right];
             total_intensity += histogram[index_right];
-            if (i > 5 && histogram[index_right] > histogram[index_right - 1]) break;
+            if (i > 5 && index_right - 1 >= 0 &&
+                histogram[index_right] > histogram[index_right - 1]) break;
         }
     }
 
@@ -92,12 +96,14 @@ std::vector<double> hist::calc_peak_param(
 
         if (index_left >= 0) {
             variance += histogram[index_left] * std::pow(index_left - mean_index, 2);
-            if (i > 5 && histogram[index_left] > histogram[index_left + 1]) break;
+            if (i > 5 && index_left + 1 < histogram_size &&
+                histogram[index_left] > histogram[index_left + 1]) break;
         }
 
         if (index_right < histogram_size) {
             variance += histogram[index_right] * std::pow(index_right - mean_index, 2);
-            if (i > 5 && histogram[index_right] > histogram[index_right - 1]) break;
+            if (i > 5 && index_right - 1 >= 0 &&
+                histogram[index_right] > histogram[index_right - 1]) break;
         }
     }
 
@@ -106,6 +112,7 @@ std::vector<double> hist::calc_peak_param(
 
     return params;
 }
+
 
 
 // Find single peak index (maximum bin)
