@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(PanoramaCT LANGUAGES C CXX)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -81,9 +83,10 @@ add_library(panorama STATIC
 
 set(PanoramaCT_LIBRARIES panorama)
 
+# add_subdirectory(mcanal)
+# add_subdirectory(mronj)
+add_subdirectory(test)
 #add_subdirectory(multi)
-add_subdirectory(mronj)
-
 
 
 
