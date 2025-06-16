@@ -169,8 +169,8 @@ std::pair<short, short> poemi::calc_sampling_slice_range(const std::vector<short
     double sigma_t = params[2];
     double w = 2.0 * sigma_t;
 
-    short As = Es - 3.7 * w;
-    short Ae = Es + 3.7 * w;
+    short As = Es - 1.9 * w;//3.7
+    short Ae = Es + 2.5 * w;
 
     return std::make_pair(As, Ae);
 }

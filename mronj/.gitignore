@@ -1,0 +1,14 @@
+.idea/
+__pycache__/
+*.jpg
+*.png
+*.pdf
+venv/
+*.sh
+_data/cifar-10-batches-py/
+*.tar.gz
+runs/
+results/
+*.txt
+memo/
+_out/

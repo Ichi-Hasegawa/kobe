@@ -6,7 +6,7 @@
 
 #include "synthesis.hpp"
 
-namespace parida {
+namespace panorama {
     template <typename PixelType>
     cv::Mat draw_2d_image(const typename itk::Image<PixelType, 2>::Pointer&);
     
@@ -20,7 +20,9 @@ namespace parida {
 
     template <typename PixelType>
     cv::Mat draw_coronal_plane(const typename itk::Image<PixelType, 2>::Pointer&, const typename std::pair<short, short>&);
-    
+}
+
+namespace parida {
     template <typename PixelType>
     cv::Mat draw_axial_plane(const typename itk::Image<PixelType, 2>::Pointer&, const BoxParam&);
 }

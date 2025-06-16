@@ -11,6 +11,58 @@
 #include <itkAffineTransform.h>
 #include <itkLinearInterpolateImageFunction.h>
 
+
+template <typename PixelType>
+typename itk::Image<PixelType, 3>::Pointer
+panorama::resampling_ct_image(
+    const typename itk::Image<PixelType, 3>::Pointer& img
+) {
+    // 型定義（明示）
+    typedef itk::Image<PixelType, 3> ImageType;
+    typedef itk::ResampleImageFilter<ImageType, ImageType> ResampleFilterType;
+    typedef itk::LinearInterpolateImageFunction<ImageType, double> InterpolatorType;
+
+    // 入力画像の spacing / size を取得
+    typename ImageType::SpacingType input_spacing = img->GetSpacing();
+    typename ImageType::SizeType input_size = img->GetLargestPossibleRegion().GetSize();
+
+    // X, Y spacing が一致している前提で、Zをそれに合わせる
+    double target_spacing_value = input_spacing[0];
+
+    // 警告：X, Y の spacing が一致していない場合（微差含む）
+    if (std::abs(input_spacing[0] - input_spacing[1]) > 1e-5) {
+        std::cerr << "[warning] spacing[0] != spacing[1]: "
+                  << input_spacing[0] << " vs " << input_spacing[1] << std::endl;
+    }
+
+    // 目標 spacing 設定
+    typename ImageType::SpacingType spacing;
+    spacing[0] = target_spacing_value;
+    spacing[1] = target_spacing_value;
+    spacing[2] = target_spacing_value;
+
+    // spacing に合わせて新しいサイズを計算
+    typename ImageType::SizeType new_size;
+    for (unsigned int i = 0; i < 3; ++i) {
+        new_size[i] = static_cast<unsigned int>(
+            input_size[i] * (input_spacing[i] / spacing[i])
+        );
+    }
+
+    // Resample フィルタの設定
+    typename ResampleFilterType::Pointer resampler = ResampleFilterType::New();
+    resampler->SetInput(img);
+    resampler->SetOutputSpacing(spacing);
+    resampler->SetSize(new_size);
+    resampler->SetOutputOrigin(img->GetOrigin());
+    resampler->SetOutputDirection(img->GetDirection());
+    resampler->SetInterpolator(InterpolatorType::New());
+    resampler->Update();
+
+    return resampler->GetOutput();
+}
+
+
 // Windowing Hounsfield Units (HU) to [HU_MIN, HU_MAX]
 template <typename PixelType>
 typename itk::Image<PixelType, 3>::Pointer
@@ -192,6 +244,7 @@ panorama::rotate_ct_image(
 
 
 #define PIXEL_TYPE_IMAGE(T) \
+    template itk::Image<T, 3>::Pointer panorama::resampling_ct_image<T>(const typename itk::Image<T, 3>::Pointer &img); \
     template itk::Image<T, 3>::Pointer panorama::window_ct_image<T>(const typename itk::Image<T, 3>::Pointer &img); \
     template itk::Image<T, 3>::Pointer panorama::extract_slices<T>(const typename itk::Image<T, 3>::Pointer &img, const std::pair<short, short> &range); \
     template itk::Image<T, 3>::Pointer panorama::rotate_ct_image<T>(const typename itk::Image<T, 3>::Pointer &img, const char &axis, const double &angle); \

@@ -10,7 +10,7 @@
 #include "synthesis.hpp"
 
 template <typename PixelType>
-cv::Mat parida::draw_2d_image(const typename itk::Image<PixelType, 2>::Pointer &img) {
+cv::Mat panorama::draw_2d_image(const typename itk::Image<PixelType, 2>::Pointer &img) {
     // Get ITK image size
     typename itk::Image<PixelType, 2>::SizeType size_itk = img->GetLargestPossibleRegion().GetSize();
 
@@ -59,7 +59,7 @@ cv::Mat parida::draw_2d_image(const typename itk::Image<PixelType, 2>::Pointer &
 }
 
 
-cv::Mat parida::draw_histogram(
+cv::Mat panorama::draw_histogram(
     const std::vector<short> &histogram, 
     const std::vector<short> &curve,
     const short &threshold1,
@@ -105,7 +105,7 @@ cv::Mat parida::draw_histogram(
 }
 
 template <typename PixelType>
-cv::Mat parida::draw_jaw_box(
+cv::Mat panorama::draw_jaw_box(
     const typename itk::Image<PixelType, 2>::Pointer &mip_image,
     const typename itk::Image<PixelType, 2>::Pointer &mask_image
 ) {
@@ -189,7 +189,7 @@ cv::Mat parida::draw_jaw_box(
 
 
 template <typename PixelType>
-cv::Mat parida::draw_sagittal_plane(
+cv::Mat panorama::draw_sagittal_plane(
     const typename itk::Image<PixelType, 2>::Pointer &mip_image,  
     const typename itk::Image<PixelType, 2>::Pointer &mask_image 
 ) {
@@ -268,7 +268,7 @@ cv::Mat parida::draw_sagittal_plane(
 }
 
 template <typename PixelType>
-cv::Mat parida::draw_coronal_plane(
+cv::Mat panorama::draw_coronal_plane(
     const typename itk::Image<PixelType, 2>::Pointer &img,
     const typename std::pair<short, short> &slice_range
 ) {
@@ -474,10 +474,10 @@ cv::Mat parida::draw_axial_plane(
 
 
 #define PIXEL_TYPE_DEBUG(T) \
-    template cv::Mat parida::draw_2d_image<T>(const typename itk::Image<T, 2>::Pointer &img); \
-    template cv::Mat parida::draw_jaw_box<T>(const typename itk::Image<T, 2>::Pointer &mip_image, const typename itk::Image<T, 2>::Pointer &mask_image); \
-    template cv::Mat parida::draw_sagittal_plane<T>(const typename itk::Image<T, 2>::Pointer &mip_image, const typename itk::Image<T, 2>::Pointer &mask_image); \
-    template cv::Mat parida::draw_coronal_plane<T>(const typename itk::Image<T, 2>::Pointer &img, const std::pair<short, short> &slice_range); \
+    template cv::Mat panorama::draw_2d_image<T>(const typename itk::Image<T, 2>::Pointer &img); \
+    template cv::Mat panorama::draw_jaw_box<T>(const typename itk::Image<T, 2>::Pointer &mip_image, const typename itk::Image<T, 2>::Pointer &mask_image); \
+    template cv::Mat panorama::draw_sagittal_plane<T>(const typename itk::Image<T, 2>::Pointer &mip_image, const typename itk::Image<T, 2>::Pointer &mask_image); \
+    template cv::Mat panorama::draw_coronal_plane<T>(const typename itk::Image<T, 2>::Pointer &img, const std::pair<short, short> &slice_range); \
     template cv::Mat parida::draw_axial_plane<T>(const typename itk::Image<T, 2>::Pointer &img, const BoxParam &box_params);
 
 PIXEL_TYPE_DEBUG(double)

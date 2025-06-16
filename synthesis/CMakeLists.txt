@@ -70,6 +70,8 @@ endif()
 
 include_directories(lib/include)
 
+link_directories(/usr/lib/x86_64-linux-gnu)
+
 # panorama library
 add_library(panorama STATIC
     lib/src/image/core.cpp       lib/include/image/core.hpp
@@ -84,8 +86,8 @@ add_library(panorama STATIC
 set(PanoramaCT_LIBRARIES panorama)
 
 # add_subdirectory(mcanal)
-# add_subdirectory(mronj)
-add_subdirectory(test)
+add_subdirectory(mronj)
+# add_subdirectory(test)
 #add_subdirectory(multi)
 
 

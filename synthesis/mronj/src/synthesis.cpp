@@ -115,8 +115,10 @@ typename itk::Image<PixelType, 2>::Pointer parida::compute_panoramic_image(
     float b = 8 * box_param.size.height / 10.0f;           // Ellipse semi-minor axis
 
     // Sampling range for angles
-    float start_angle = 160.0f;
-    float end_angle = 380.0f;
+    // float start_angle = 160.0f;
+    // float end_angle = 380.0f;
+    float start_angle = 190.0f;
+    float end_angle = 350.0f;
 
     // Get slice spacing and number of slices
     float dx = img->GetSpacing()[0];  // X-spacing
@@ -132,10 +134,12 @@ typename itk::Image<PixelType, 2>::Pointer parida::compute_panoramic_image(
     std::cout << "Number of z-axis slices: " << z_slices << std::endl;
     */
     // Min and max shift values for sampling interval
-    float mean_shift = (end_angle - start_angle) / 2378;
+    //float mean_shift = (end_angle - start_angle) / 2378;
+    float mean_shift = (end_angle - start_angle) / 1600;
     float min_shift = mean_shift * 0.8;
     float max_shift = mean_shift * 1.2;
-    float z_step = static_cast<float>(z_slices) / 1160;
+    //float z_step = static_cast<float>(z_slices) / 1160;
+    float z_step = static_cast<float>(z_slices) / 600;
 
     float cumulative_length = 0;
     std::vector<double> sample_positions;

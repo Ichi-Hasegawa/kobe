@@ -3,7 +3,8 @@
 Automatic Synthesis of Panoramic Radiographs from Computed Tomography Data
 
 ## To Do
-* 知覚鈍麻
+* synthesis method
+* mronj
 
 ## Overview
 

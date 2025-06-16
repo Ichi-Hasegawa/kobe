@@ -10,6 +10,10 @@ namespace panorama {
     
     template <typename PixelType>
     typename itk::Image<PixelType, 3>::Pointer
+    resampling_ct_image(const typename itk::Image<PixelType, 3>::Pointer&);
+    
+    template <typename PixelType>
+    typename itk::Image<PixelType, 3>::Pointer
     window_ct_image(const typename itk::Image<PixelType, 3>::Pointer&);
     
     template <typename PixelType>
